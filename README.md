@@ -46,4 +46,4 @@ You can find a detailed [project rubric, here](https://review.udacity.com/#!/rub
 
 The project has been tested with circlecli
 
-[![<serarni>](https://circleci.com/gh/serarni/udacity-devops-5-microservices.svg?style=svg)]((https://circleci.com/gh/circleci/circleci-docs/tree/circleci-project-setup))
+[![<serarni>](https://circleci.com/gh/serarni/udacity-devops-5-microservices.svg?style=svg)]((https://circleci.com/gh/serarni/udacity-devops-5-microservices))

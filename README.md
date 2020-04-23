@@ -32,6 +32,7 @@ You can find a detailed [project rubric, here](https://review.udacity.com/#!/rub
 
 1. Standalone:  `python app.py`
 2. Run in Docker:  `./run_docker.sh`
+3. Upload image to docker account: ./upload_docker.sh
 3. Run in Kubernetes:  `./run_kubernetes.sh`
 
 ### Kubernetes Steps
@@ -40,3 +41,9 @@ You can find a detailed [project rubric, here](https://review.udacity.com/#!/rub
 * Setup and Configure Kubernetes locally
 * Create Flask app in Container
 * Run via kubectl
+
+### Circlecli
+
+The project has been tested with circlecli
+
+[![<serarni>](https://circleci.com/gh/serarni/udacity-devops-5-microservices.svg?style=svg)]((https://circleci.com/gh/serarni/udacity-devops-5-microservices))

@@ -6,7 +6,7 @@ IMAGE_NAME=udacity-p5
 
 # Step 1:
 # Build image and add a descriptive tag
-docker build -t $IMAGE_NAME:p5 .
+docker build -t $IMAGE_NAME .
 # Step 2: 
 # List docker images
 docker images

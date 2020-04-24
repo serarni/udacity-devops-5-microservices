@@ -1,5 +1,5 @@
 
-[![serarni](https://circleci.com/gh/serarni/udacity-devops-5-microservices/tree/circleci-project-setup.svg?style=svg)](https://app.circleci.com/pipelines/github/serarni/udacity-devops-5-microservices)
+[![serarni](https://circleci.com/gh/serarni/udacity-devops-5-microservices/tree/master.svg?style=svg)](https://app.circleci.com/pipelines/github/serarni/udacity-devops-5-microservices)
 
 ## Project Overview
 

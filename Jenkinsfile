@@ -11,7 +11,7 @@ node {
         /* This builds the actual image; synonymous to
          * docker build on the command line */
 
-        app = docker.build("udacity-p5")
+        app = docker.build("serarni/udacity-p5")
     }
 
     stage('Test image') {

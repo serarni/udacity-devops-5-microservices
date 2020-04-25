@@ -1,0 +1,26 @@
+[
+	{
+		"ParameterKey": "EnvironmentName",
+		"ParameterValue": "UdacityProject3"
+	},
+	{
+		"ParameterKey": "AllowedSshIp",
+		"ParameterValue": "62.42.146.254/32"
+	},
+	{
+		"ParameterKey": "WebAppEC2InstanceType",
+		"ParameterValue": "t3.small"
+	},
+	{
+		"ParameterKey": "WebAppAutoscalingMinSize",
+		"ParameterValue": "4"
+	},
+	{
+		"ParameterKey": "WebAppAutoscalingMaxSize",
+		"ParameterValue": "8"
+	},
+	{
+		"ParameterKey": "EC2InstancesKeyName",
+		"ParameterValue": "noKeyName"
+	}
+]

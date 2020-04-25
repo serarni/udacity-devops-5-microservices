@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+HOST=$1
 PORT=8000
 echo "Port: $PORT"
 
@@ -25,4 +25,4 @@ curl -d '{
    }
 }'\
      -H "Content-Type: application/json" \
-     -X POST http://localhost:$PORT/predict
+     -X POST http://$HOST:$PORT/predict

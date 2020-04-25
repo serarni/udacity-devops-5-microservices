@@ -126,8 +126,9 @@ Resources:
           sudo apt-key fingerprint 0EBFCD88
           sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
           sudo apt-get update
-          apt-get install docker-ce docker-ce-cli containerd.io
-          docker run -p 8000:80 serarni/udacity-p5
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          sudo usermod -aG docker $USER
+          docker run -p 80:80 serarni/udacity-p5
       AssociatePublicIpAddress: false
       ImageId: ami-0b418580298265d5c # buntu Server 18.04 LTS (HVM), SSD Volume Type
       #KeyName: !Sub "${EC2InstancesKeyName}"

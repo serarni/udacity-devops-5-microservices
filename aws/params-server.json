@@ -21,6 +21,6 @@
 	},
 	{
 		"ParameterKey": "EC2InstancesKeyName",
-		"ParameterValue": "udacityTest"
+		"ParameterValue": "test"
 	}
 ]

@@ -1,0 +1,216 @@
+Description: >
+    Sergio Arnillas / Udacity 2020 / Devops -capstone
+    Servers configuration
+
+Parameters:
+
+    EnvironmentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+        
+    AllowedSshIp:
+        Description: IP allowd to connect to bastion from SSH
+        Type: String
+        
+    WebAppEC2InstanceType:
+        Description: Instance type for EC2, where web app will be deployed
+        Type: String
+        
+    WebAppAutoscalingMinSize:
+        Description: Minimum number of machines running into the autoscaling group where web app will be deployed
+        Type: String
+        
+    WebAppAutoscalingMaxSize:
+        Description: Maximum number of machines running into the autoscaling group where web app will be deployed
+        Type: String    
+    
+    EC2InstancesKeyName:
+        Description: Name for the key par for been able to connect to EC2 isntances over SSH
+        Type: String    
+    
+Resources:
+  # I create a Role called UdacityS3ReadOnlyC2 and just give it a policy of S3 Read-Only Access
+  ProfileWithRolesForOurApp:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      Roles:
+        - UdacityS3ReadOnlyEC2
+  
+  # public server to be able to connect from there to the private servers from ssh
+  BastionEC2Instance: 
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: "ami-0b418580298265d5c"
+      KeyName: !Sub "${EC2InstancesKeyName}"
+      InstanceType: t2.micro
+      SecurityGroupIds:
+       - Ref: BastionSecGroup
+      SubnetId: 
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-PUB1-SN"
+      Monitoring: no
+      BlockDeviceMappings:
+      - DeviceName: "/dev/sdk"
+        Ebs:
+          VolumeSize: '1' 
+  
+  # security groups for each resource
+  LBSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to our load balancer
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+  WebServerSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to our hosts and SSH from local only port 22
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+      # TODO: Sacar a un parámetro el puerto a exponer al exterior
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 
+          Fn::ImportValue:
+            !Sub "${EnvironmentName}-VPC-IP"
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 0
+        ToPort: 65535
+        CidrIp: 0.0.0.0/0
+  BastionSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH from your local IP only port 22
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: !Sub "${AllowedSshIp}"
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 0
+        ToPort: 65535
+        CidrIp: 0.0.0.0/0
+  # launch config
+  WebAppLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+          sudo apt-key fingerprint 0EBFCD88
+          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          sudo usermod -aG docker $USER
+          docker run -p 80:80 serarni/udacity-p5
+      AssociatePublicIpAddress: false
+      ImageId: ami-0b418580298265d5c # buntu Server 18.04 LTS (HVM), SSD Volume Type
+      KeyName: !Sub "${EC2InstancesKeyName}"
+      SecurityGroups:
+      - Ref: WebServerSecGroup
+      # according to requirementes, a t2.medium is required, but for develop, t2.small will be used (to avoid charges)
+      InstanceType: !Sub "${WebAppEC2InstanceType}"
+      BlockDeviceMappings:
+      - DeviceName: "/dev/sdk"
+        Ebs:
+          VolumeSize: '10'
+      #IamInstanceProfile: "UdacityS3ReadOnlyEC2"
+  
+  # autoscaling servers in private network
+  WebAppGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+      - Fn::ImportValue: 
+          !Sub "${EnvironmentName}-PRIV-NETS"
+      LaunchConfigurationName:
+        Ref: WebAppLaunchConfig
+      MinSize: !Sub "${WebAppAutoscalingMinSize}"
+      MaxSize: !Sub "${WebAppAutoscalingMaxSize}"
+      TargetGroupARNs:
+      - Ref: WebAppTargetGroup
+  # load balancer for the 2 prublic subnets
+  WebAppLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets:
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+      - Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+      SecurityGroups:
+      - Ref: LBSecGroup
+  # redirecting from load balancer to each server app (needed even when there is one app)
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn:
+          Ref: WebAppTargetGroup
+      LoadBalancerArn:
+        Ref: WebAppLB
+      Port: '80'
+      Protocol: HTTP
+  ALBListenerRule:
+      Type: AWS::ElasticLoadBalancingV2::ListenerRule
+      Properties:
+        Actions:
+        - Type: forward
+          TargetGroupArn: !Ref 'WebAppTargetGroup'
+        Conditions:
+        - Field: path-pattern
+          Values: [/]
+        ListenerArn: !Ref 'Listener'
+        Priority: 1
+  # target group the detect health for servers
+  WebAppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: 
+        Fn::ImportValue:
+          Fn::Sub: "${EnvironmentName}-VPCID"
+          
+Outputs: 
+
+    WebAppLBDNS:
+        Description: URL for the LoadBalancer
+        #Value: {"Fn::GetAtt" : [ "WebAppLB", "DNSName" ]}
+        Value: !Join [ "//", [ "http:", {"Fn::GetAtt" : [ "WebAppLB", "DNSName" ]} ] ]
+        Export:
+          Name: !Sub ${EnvironmentName}-WebApp-LBDNS
+    #InstanceID:
+        #Description: The Instance ID
+        #Value: !Ref EC2Instance

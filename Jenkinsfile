@@ -6,6 +6,10 @@ node {
 
         checkout scm
     }
+	
+	stage('Check sintax with lint') {
+        sh ('make lint')
+    }
 
     stage('Build image') {
         /* This builds the actual image; synonymous to
@@ -33,4 +37,9 @@ node {
             app.push("latest")
         }
     }
+	
+	stage('Terminate instances AWS') {
+		sh ('./aws/scripts/terminate-instances.sh')
+    }
+	
 }

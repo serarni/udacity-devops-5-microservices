@@ -6,6 +6,10 @@ node {
 
         checkout scm
     }
+	
+	stage('Check sintax with lint') {
+        sh ('make lint')
+    }
 
     stage('Build image') {
         /* This builds the actual image; synonymous to

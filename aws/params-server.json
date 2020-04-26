@@ -13,11 +13,11 @@
 	},
 	{
 		"ParameterKey": "WebAppAutoscalingMinSize",
-		"ParameterValue": "1"
+		"ParameterValue": "2"
 	},
 	{
 		"ParameterKey": "WebAppAutoscalingMaxSize",
-		"ParameterValue": "2"
+		"ParameterValue": "4"
 	},
 	{
 		"ParameterKey": "EC2InstancesKeyName",

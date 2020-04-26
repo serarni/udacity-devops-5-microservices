@@ -211,3 +211,6 @@ Outputs:
         Value: !Join [ "//", [ "http:", {"Fn::GetAtt" : [ "WebAppLB", "DNSName" ]} ] ]
         Export:
           Name: !Sub ${EnvironmentName}-WebApp-LBDNS
+    #InstanceID:
+        #Description: The Instance ID
+        #Value: !Ref EC2Instance
